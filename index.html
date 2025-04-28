@@ -14,6 +14,14 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="table.js"></script>
     <script src="utils.js"></script>
+    <style>
+        table tbody tr:hover {
+            background-color: #aaaaaa36;
+        }
+        table tbody .item {
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body>
@@ -70,8 +78,7 @@
         </div>
     </main>
     <script>
-
-        // Function to fetch data using GraphQL
+        // update the UI
         async function update() {
             // Get the party size and level from the input fields
             const partySize = document.getElementById('party-size').value;
@@ -87,7 +94,7 @@
             // Show the encouter thresholds
             document.getElementById('thresholds').innerHTML = `<p>Encounter Thresholds:</p>`;
             for (const [key, value] of Object.entries(thresholds)) {
-                document.getElementById('thresholds').innerHTML += `<p>${key}: ${value}</p>`;
+                document.getElementById('thresholds').innerHTML += `<p>${thresholdsNames[key]}: ${value*partySizeInt}</p>`;
             }
 
             // filter the monsters based on the party level
@@ -101,7 +108,7 @@
             const partyLevelInt = parseInt(partyLevel, 10);
             const partySizeInt = parseInt(partySize, 10);
 
-            // The max challenge rating shold not be more than the average level of the party
+            // The max challenge rating should not be more than the average level of the party
             const maxChallengeRating = partyLevelInt;
 
             const searchInput = document.getElementById("search-input");
@@ -141,9 +148,14 @@
             // add a click listener to the row to remove the monster from the monster group
             monsterRow.addEventListener('click', function() {
                 monsterGroup.removeChild(monsterRow);
+                updateMonsterXP();
             });
 
-            // ipdate the total XP for the monster group
+            updateMonsterXP();
+        }
+
+        function updateMonsterXP(){
+            const monsterGroup = document.getElementById('monsters-body');
             const totalXP = document.getElementById('total-xp');
 
             // sum all the XP values in the monster group and apply the appropriate multiplier
@@ -154,14 +166,30 @@
                 totalXPValue += monsterXPValue;
             }
 
-            totalXP.innerText = `${totalXPValue*getMultiplier(monsterRows.length)} with multiplier of ${getMultiplier(monsterRows.length)}`;
-
+            totalXPValue = totalXPValue*getMultiplier(monsterRows.length);
+            totalXP.innerText = `${totalXPValue} with multiplier of ${getMultiplier(monsterRows.length)}`;
+            // display the level of the encounter based on threshold and totalXP
+            const partyLevel = document.getElementById('party-level').value;
+            const partyLevelInt = parseInt(partyLevel, 10);
+            const partySize = document.getElementById('party-size').value;
+            const partySizeInt = parseInt(partySize, 10);
+            const thresholds = getThresholds(partyLevelInt);
+            if(totalXPValue > thresholds[3]*partySizeInt) {
+                totalXP.innerText += ` (Deadly)`;
+            } else if (totalXPValue > thresholds[2]*partySizeInt) {
+                totalXP.innerText += ` (Hard)`;
+            } else if (totalXPValue > thresholds[1]*partySizeInt) {
+                totalXP.innerText += ` (Medium)`;
+            } else {
+                totalXP.innerText += ` (Easy)`;
+            }
         }
 
-        (function(){
+        // init the page
+        (function init(){
             document.getElementById('monster-container').innerHTML = tableSTR;
             document.getElementById('party-level').addEventListener('change', update);
-            update();
+            // update();
 
             // add the XP for each monster to the table
             const table = document.getElementById('monsters-table');
@@ -187,7 +215,7 @@
 
                 // add a click listener to the row to add the monster to the monster group
                 rows[i].addEventListener('click', function() {
-                    const monsterName = this.getElementsByTagName('td')[0].innerText;
+                    const monsterName = this.getElementsByTagName('td')[0].innerHTML;
                     const monsterCR = parseFloat(this.getElementsByTagName('td')[1].innerText);
                     const monsterXP = parseInt(this.getElementsByTagName('td')[2].innerText);
                     const monsterType = this.getElementsByTagName('td')[3].innerText;
@@ -196,6 +224,8 @@
                     addMonsterToGroup(monsterName, monsterType, monsterCR, monsterXP);
                 });
             }
+
+            update();
 
         })();
     </script>
