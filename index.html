@@ -71,8 +71,13 @@
             <!-- column 2 -->
             <div class="s6">
                 <h2>Monster Atlas</h2>
-                <i class="fas fa-search"></i><input id="search-input" type="text" value="" onkeyup="filter()"><i
-                    class="fas fa-times" onclick="clearFilter()"></i>
+                <div class="grid middle-align">
+                    <i class="fas fa-search s1"></i>
+                    <div class="field border s6">
+                        <input id="search-input" type="text" value="" onkeyup="filter()">
+                    </div>
+                    <i class="fas fa-times s1" onclick="clearFilter()"></i>
+                </div>
                 <div id="monster-container" style="overflow-x: scroll;"></div>
             </div>
         </div>
