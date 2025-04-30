@@ -53,7 +53,6 @@ function getMultiplier(numberOfMonsters){
 }
 
  function getThresholds(partyAvgLevel){
-    console.log(partyAvgLevel);
     return XPthresholds[partyAvgLevel - 1] || XPthresholds[0];
  }
 

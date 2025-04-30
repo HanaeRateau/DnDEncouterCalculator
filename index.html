@@ -120,7 +120,7 @@
             const filter = searchInput.value.toLowerCase();
 
             let table = document.getElementById("monsters-table");
-            let tr = table.getElementsByTagName("tr");
+            let tr = document.getElementsByTagName("tr");
 
             // Loop through all table rows, and hide those who don't match the search query
             for (i = 0; i < tr.length; i++) {
@@ -190,49 +190,65 @@
             }
         }
 
-        // init the page
-        (function init(){
-            document.getElementById('monster-container').innerHTML = tableSTR;
-            document.getElementById('party-level').addEventListener('change', update);
-            // update();
+        function init(){
+            // load the json from atalas.json
+            fetch('atlas.json', {mode: 'no-cors'})
+                .then(response => response.json(), error => {
+                    console.error('Error loading the monster atlas:', error);
+                })
+                .then(monsters => {
+                    let monstersContainer = document.getElementById('monster-container');
+                    const table = document.createElement('table', 'monsters-table', 'border');
+                    monstersContainer.appendChild(table);
 
-            // add the XP for each monster to the table
-            const table = document.getElementById('monsters-table');
-            // add a header for the XP column
-            const headerRow = table.getElementsByTagName('thead')[0].getElementsByTagName('tr')[0];
-            const headerCell = document.createElement('th');
-            headerCell.innerText = 'XP';
-            headerRow.insertBefore(headerCell, headerRow.children[2]);
+                    // add headers to the table based on json keys
+                    const headers = Object.keys(monsters[0]);
+                    const headerRow = document.createElement('thead');
+                    const header = document.createElement('tr');
+                    for (let i = 0; i < headers.length; i++) {
+                        const headerCell = document.createElement('th');
+                        headerCell.innerText = headers[i];
+                        header.appendChild(headerCell);
+                    }
+                    headerRow.appendChild(header);
+                    table.appendChild(headerRow);
 
-            // add a cell to each row for the XP and a click listenertoadd the monster to the monster group
-            const rows = table.getElementsByTagName('tr');
-            for (let i = 1; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName('td');
+                    // add the table body to the container and fill it with the monsters
+                    const tableBody = document.createElement('tbody');
+                    // loop through the monsters and add them to the table
+                    for (let i = 0; i < monsters.length; i++) {
+                        const monster = monsters[i];
+                        const row = document.createElement('tr');
+                        tableBody.appendChild(row);
+                        for(const key in monster) {
+                            const cell = document.createElement('td');
+                            cell.innerHTML = monster[key];
+                            row.appendChild(cell);
+                        }
 
-                // insert a cell for the XP
-                if (cells.length > 0) {
-                    const monsterCR = parseFloat(cells[1].innerText);
-                    const monsterXP = getXP(monsterCR);
-                    // add a cell to the row for the XP
-                    const xpCell = rows[i].insertCell(2);
-                    xpCell.innerText = monsterXP;
-                }
+                         // add a click listener to the row to add the monster to the monster group
+                        row.addEventListener('click', function() {
+                            const monsterName = this.getElementsByTagName('td')[0].innerHTML;
+                            const monsterCR = parseFloat(this.getElementsByTagName('td')[1].innerText);
+                            const monsterXP = parseInt(this.getElementsByTagName('td')[2].innerText);
+                            const monsterType = this.getElementsByTagName('td')[3].innerText;
+                            // add the monster to the monster group
+                            addMonsterToGroup(monsterName, monsterType, monsterCR, monsterXP);
+                        });
+                    }
+                    table.appendChild(tableBody);
 
-                // add a click listener to the row to add the monster to the monster group
-                rows[i].addEventListener('click', function() {
-                    const monsterName = this.getElementsByTagName('td')[0].innerHTML;
-                    const monsterCR = parseFloat(this.getElementsByTagName('td')[1].innerText);
-                    const monsterXP = parseInt(this.getElementsByTagName('td')[2].innerText);
-                    const monsterType = this.getElementsByTagName('td')[3].innerText;
-                    // add the monster to the monster group
-                    console.log(monsterName, monsterCR, monsterXP);
-                    addMonsterToGroup(monsterName, monsterType, monsterCR, monsterXP);
+                    update();
+                }, error => {
+                    console.error('Error loading the monster atlas:', error);
                 });
-            }
 
-            update();
 
-        })();
+            document.getElementById('party-level').addEventListener('change', update);
+        }
+
+        // call init once the page is loaded
+        init();
     </script>
 </body>
 
