@@ -168,7 +168,7 @@
                 const { x, y, width, height } = event.target.getBoundingClientRect();
                 if(event.target.getAttribute('href'))
                     preview.firstElementChild.src = event.target.getAttribute('href');
-                if(event.target.firstElementChild?.getAttribute('href'))
+                else if(event.target.firstElementChild?.getAttribute('href'))
                     preview.firstElementChild.src = event.target.firstElementChild.getAttribute('href');
                 preview.animate({
                     left: `${x+width/2}px`,
@@ -177,9 +177,11 @@
                 }, {duration: 10, fill: "forwards"});
                 preview.style.display = '';
             };
-            monsterRow.firstElementChild.onpointerleave = event => {
+            monsterRow.addEventListener('pointerleave', function (event) {
+                if(preview.matches(':hover'))
+                    return;
                 preview.style.display = 'none';
-            }
+            });
 
             // add a click listener to the row to remove the monster from the monster group
             monsterRow.addEventListener('click', function() {
@@ -272,7 +274,7 @@
                             const { x, y, width, height } = event.target.getBoundingClientRect();
                             if(event.target.getAttribute('href'))
                                 preview.firstElementChild.src = event.target.getAttribute('href');
-                            if(event.target.firstElementChild?.getAttribute('href'))
+                            else if(event.target.firstElementChild?.getAttribute('href'))
                                 preview.firstElementChild.src = event.target.firstElementChild.getAttribute('href');
                             preview.animate({
                                 left: `${x+width/2}px`,
@@ -281,9 +283,11 @@
                             }, {duration: 100, fill: "forwards"});
                             preview.style.display = '';
                         };
-                        row.firstElementChild.onpointerleave = event => {
+                        row.addEventListener('pointerleave', function (event) {
+                            if(preview.matches(':hover'))
+                                return;
                             preview.style.display = 'none';
-                        }
+                        });
 
                          // add a click listener to the row to add the monster to the monster group
                         row.addEventListener('click', function() {
