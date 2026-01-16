@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D&D 5e Encounter Calculator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐲</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <link href="https://cdn.jsdelivr.net/npm/beercss@3.9.7/dist/cdn/beer.min.css" rel="stylesheet">
@@ -24,6 +25,9 @@
 </head>
 
 <body>
+    <div id="preview-div" style="position: fixed; height: 300px; z-index: 1000; display: none;">
+        <iframe src="" scrolling="yes" style="height: 300px; border: 0px none; width: 600px;"></iframe>
+    </div>
     <main class="responsive">
         <h1>D&D 5e Encounter Calculator</h1>
         <div class="grid">
@@ -48,7 +52,11 @@
             
                 <article class="border fill">
                     <h2>The Monsters</h2>
-                    <p>Total XP: <span id="total-xp">0</span></p>
+                    <p></p>
+                    <div class="grid">
+                        <div class="s10">Total XP: <span id="total-xp">0</span> </div>
+                        <div><button id="clear-btn" class="transparent circle"><i>delete</i></button> </div>
+                    </div>
                     <div id="monster-group">
                         <table class="">
                             <thead>
@@ -118,20 +126,20 @@
             const searchInput = document.getElementById("search-input");
             const filter = searchInput.value.toLowerCase();
 
-            let table = document.getElementById("monsters-table");
-            let tr = document.getElementsByTagName("tr");
+            let table = document.querySelector("#monsters-table");
+            let trs = table.querySelectorAll("#monsters-table tr");
 
             // Loop through all table rows, and hide those who don't match the search query
-            for (i = 0; i < tr.length; i++) {
-                td = tr[i].getElementsByTagName("td")[0];
+            for (i = 0; i < trs.length; i++) {
+                td = trs[i].querySelector("td");
                 if (td) {
-                    const monsterLevel = parseInt(tr[i].querySelector('td:nth-child(2)').textContent, 10);
+                    const monsterLevel = parseInt(trs[i].querySelector('td:nth-child(2)').textContent, 10);
                     const monsterCR = parseFloat(monsterLevel);
                     txtValue = td.textContent || td.innerText;
                     if (txtValue.toLowerCase().indexOf(filter) > -1 && monsterCR <= maxChallengeRating) {
-                        tr[i].style.display = "table-row";
+                        trs[i].style.display = "table-row";
                     } else {
-                        tr[i].style.display = "none";
+                        trs[i].style.display = "none";
                     }
                 }
             }
@@ -149,12 +157,35 @@
             monsterRow.innerHTML = `<td>${monsterName}</td><td>${monsterType}</td><td>${monsterCR}</td><td>${monsterXP}</td>`;
             monsterGroup.appendChild(monsterRow);
 
+            // prevent removing monster when clicking the link
+            monsterRow.querySelector("a").addEventListener('click',function(event) {
+                event.stopPropagation();
+            });
+
+            // Preview
+            const preview = document.getElementById('preview-div');
+            monsterRow.firstElementChild.onpointerover = event => {
+                const { x, y, width, height } = event.target.getBoundingClientRect();
+                if(event.target.getAttribute('href'))
+                    preview.firstElementChild.src = event.target.getAttribute('href');
+                if(event.target.firstElementChild?.getAttribute('href'))
+                    preview.firstElementChild.src = event.target.firstElementChild.getAttribute('href');
+                preview.animate({
+                    left: `${x+width/2}px`,
+                    top: `${y+height/2}px`
+                    
+                }, {duration: 10, fill: "forwards"});
+                preview.style.display = '';
+            };
+            monsterRow.firstElementChild.onpointerleave = event => {
+                preview.style.display = 'none';
+            }
+
             // add a click listener to the row to remove the monster from the monster group
             monsterRow.addEventListener('click', function() {
                 monsterGroup.removeChild(monsterRow);
                 updateMonsterXP();
             });
-
             updateMonsterXP();
         }
 
@@ -189,6 +220,10 @@
             }
         }
 
+        function clearMonsterGroup(){
+            document.getElementById('monsters-body').textContent = '';
+        }
+
         function init(){
             // load the json from atalas.json
             fetch('atlas.json', {mode: 'no-cors'})
@@ -197,7 +232,8 @@
                 })
                 .then(monsters => {
                     let monstersContainer = document.getElementById('monster-container');
-                    const table = document.createElement('table', 'monsters-table', 'border');
+                    const table = document.createElement('table', 'border');
+                    table.id = 'monsters-table';
                     monstersContainer.appendChild(table);
 
                     // add headers to the table based on json keys
@@ -225,6 +261,30 @@
                             row.appendChild(cell);
                         }
 
+                        // prevent clicking on the link to add the monster
+                        row.querySelector("a").addEventListener('click',function(event) {
+                            event.stopPropagation();
+                        });
+
+                        // preview
+                        const preview = document.getElementById('preview-div');
+                        row.firstElementChild.onpointerover = event => {
+                            const { x, y, width, height } = event.target.getBoundingClientRect();
+                            if(event.target.getAttribute('href'))
+                                preview.firstElementChild.src = event.target.getAttribute('href');
+                            if(event.target.firstElementChild?.getAttribute('href'))
+                                preview.firstElementChild.src = event.target.firstElementChild.getAttribute('href');
+                            preview.animate({
+                                left: `${x+width/2}px`,
+                                top: `${y+height/2}px`
+                                
+                            }, {duration: 100, fill: "forwards"});
+                            preview.style.display = '';
+                        };
+                        row.firstElementChild.onpointerleave = event => {
+                            preview.style.display = 'none';
+                        }
+
                          // add a click listener to the row to add the monster to the monster group
                         row.addEventListener('click', function() {
                             const monsterName = this.getElementsByTagName('td')[0].innerHTML;
@@ -244,6 +304,7 @@
 
 
             document.getElementById('party-level').addEventListener('change', update);
+            document.getElementById('clear-btn').addEventListener('click', clearMonsterGroup);
         }
 
         // call init once the page is loaded
